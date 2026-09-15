@@ -1,0 +1,969 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Master Lab 1</title><style>body{font-family:Segoe UI,Arial,sans-serif;max-width:1100px;margin:40px auto;padding:0 24px;line-height:1.6;color:#1f2328}h1{font-size:34px;border-bottom:1px solid #d0d7de;padding-bottom:10px}h2{margin-top:42px;font-size:27px}h3{font-size:21px;margin-top:30px}pre{background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:14px;overflow:auto}code{background:#f6f8fa;padding:2px 5px;border-radius:4px}pre code{background:none;padding:0}figure{margin:24px 0 40px}figure img{max-width:100%;border:1px solid #d0d7de;border-radius:8px}figcaption{font-size:14px;color:#57606a;margin-top:8px}blockquote{border-left:4px solid #0969da;padding-left:14px;color:#57606a;margin-left:0}hr{border:0;border-top:1px solid #d8dee4;margin:55px 0}.tableline{margin:0;border-radius:0;padding:5px 10px}</style></head><body><h2>Contents</h2><p><a href="#s1">1. 01 Infrastructure and VM Setup</a></p><p><a href="#s2">2. 02 AD DS and Domain Join</a></p><p><a href="#s3">3. 03 Active Directory Structure</a></p><p><a href="#s4">4. 04 DNS DHCP and Networking</a></p><p><a href="#s5">5. 05 Group Policy and Endpoint Security</a></p><p><a href="#s6">6. 06 File Shares and RBAC</a></p><p><a href="#s7">7. 07 Account Lockout and Helpdesk</a></p><p><a href="#s8">8. 08 Auditing and Event Viewer</a></p><p><a href="#s9">9. 09 PowerShell Automation</a></p><p><a href="#s10">10. 10 Final Validation</a></p><h1>Master Lab 1 — Complete Step-by-Step Documentation</h1>
+
+<h2>Enterprise Windows IT Support &amp; Active Directory Home Lab</h2>
+
+<p>This archive reconstructs the lab from initial virtual-machine setup through final validation. It is written as a repeatable runbook: each section records the action, commands used where command-line work was actually performed, the observed result, and the associated screenshot evidence.</p>
+
+<h3>Fidelity note</h3>
+
+<ul>
+<li>GUI actions are documented as GUI steps; commands are **not invented** for steps that were completed through the interface.</li>
+<li>Where the lab clearly used a command, that command is included.</li>
+<li>A few optional PowerShell equivalents are labelled **Optional equivalent** and are not presented as commands that were necessarily used during the original run.</li>
+<li>The lab evidence comes from the screenshots preserved during the project.</li>
+</ul>
+
+<h3>Lab identity</h3>
+
+<pre class="tableline">| Item | Value |</pre>
+<pre class="tableline">|---|---|</pre>
+<pre class="tableline">| Hypervisor | Oracle VirtualBox |</pre>
+<pre class="tableline">| Domain controller | <code>DC01</code> — Windows Server 2022 Standard Evaluation (Desktop Experience) |</pre>
+<pre class="tableline">| Client | <code>CLIENT01</code> — Windows 11 Pro |</pre>
+<pre class="tableline">| Domain | <code>adlab.local</code> |</pre>
+<pre class="tableline">| NetBIOS domain | <code>ADLAB</code> |</pre>
+<pre class="tableline">| Internal network | <code>192.168.10.0/24</code> |</pre>
+<pre class="tableline">| DC / DNS / DHCP | <code>192.168.10.10</code> |</pre>
+<pre class="tableline">| CLIENT01 lease | <code>192.168.10.100</code> |</pre>
+<pre class="tableline">| DC NAT address observed | <code>10.0.2.15</code> |</pre>
+
+<h3>Main AD objects</h3>
+
+<ul>
+<li>User OUs: `ADLAB-Users\IT`, `ADLAB-Users\HR`, `ADLAB-Users\Sales`</li>
+<li>Computer OU: `ADLAB-Computers`</li>
+<li>Group OU: `ADLAB-Groups`</li>
+<li>Users: `mdmhasan` (IT), `sahmed` (Sales), `mbrown` (HR)</li>
+<li>Groups: `GG_IT_Users`, `GG_Sales_Users`, `GG_HR_Users`</li>
+<li>Shares: `C:\CompanyShares\IT`, `C:\CompanyShares\HR`, `C:\CompanyShares\Sales`</li>
+</ul>
+
+<p>Open <code>MASTER-LAB-GUIDE.html</code> for the easiest offline reading experience, or read the numbered Markdown files in order.</p>
+
+
+<hr>
+
+<h1 id="s1">1. Infrastructure and Virtual Machine Setup</h1>
+
+<h2>Step 1.1 — Create the Windows Server VM</h2>
+
+<ol>
+<li>In VirtualBox, create a Windows Server 2022 VM.</li>
+<li>Install **Windows Server 2022 Standard Evaluation (Desktop Experience)**.</li>
+<li>Complete the first boot and administrator setup.</li>
+<li>Rename the server to `DC01` using **Server Manager → Local Server → Computer name**.</li>
+<li>Restart when prompted.</li>
+</ol>
+
+<p><strong>Observed result:</strong> The server came online as <code>DC01</code> and was ready to be configured as the domain controller.</p>
+
+<p><strong>Evidence — DC01 renamed and visible in Server Manager</strong></p>
+
+<figure><img src="01-Infrastructure-and-VM-Setup/evidence/01-DC01-Renamed-Local-Server.png" alt="DC01 renamed and visible in Server Manager"><figcaption>DC01 renamed and visible in Server Manager</figcaption></figure>
+
+
+<h2>Step 1.2 — Configure two network adapters on DC01</h2>
+
+<p>In VirtualBox, configure:</p>
+
+<ul>
+<li>**Adapter 1:** NAT — internet access.</li>
+<li>**Adapter 2:** Internal Network — name `ADLAB` — isolated domain traffic.</li>
+</ul>
+
+<p>On Windows Server:</p>
+
+<ul>
+<li>NAT NIC (`Ethernet-Internet`) used the VirtualBox NAT network and had `10.0.2.15` during the lab.</li>
+<li>Internal NIC (`Ethernet-ADLAB`) was configured as `192.168.10.10/24`.</li>
+<li>DNS on the internal interface pointed to `192.168.10.10` after DNS/AD DS was available.</li>
+</ul>
+
+<p><strong>Important final state:</strong> DNS registration was disabled on the NAT-facing interface and enabled on <code>Ethernet-ADLAB</code> so the NAT IP would not pollute AD DNS.</p>
+
+<p><strong>Evidence — DC01 NAT adapter configuration</strong></p>
+
+<figure><img src="01-Infrastructure-and-VM-Setup/evidence/02-DC01-Adapter1-NAT.png" alt="DC01 NAT adapter configuration"><figcaption>DC01 NAT adapter configuration</figcaption></figure>
+
+
+<p><strong>Evidence — DC01 ADLAB internal adapter configuration</strong></p>
+
+<figure><img src="01-Infrastructure-and-VM-Setup/evidence/03-DC01-Adapter2-ADLAB.png" alt="DC01 ADLAB internal adapter configuration"><figcaption>DC01 ADLAB internal adapter configuration</figcaption></figure>
+
+
+<h2>Step 1.3 — Create the Windows 11 client VM</h2>
+
+<ol>
+<li>Create `CLIENT01` as a Windows 11 Pro VM.</li>
+<li>Configure two NICs:</li>
+</ol>
+<p>   - Adapter 1: NAT</p>
+<p>   - Adapter 2: Internal Network <code>ADLAB</code></p>
+<ol>
+<li>The ADLAB adapter later received a DHCP lease from DC01.</li>
+</ol>
+
+<p><strong>Observed result:</strong> CLIENT01 could keep internet access through NAT while also participating in the isolated ADLAB domain network.</p>
+
+<p><strong>Evidence — CLIENT01 dual-NIC configuration</strong></p>
+
+<figure><img src="01-Infrastructure-and-VM-Setup/evidence/05-CLIENT01-Dual-NIC.png" alt="CLIENT01 dual-NIC configuration"><figcaption>CLIENT01 dual-NIC configuration</figcaption></figure>
+
+
+<h2>Step 1.4 — Confirm server roles after build</h2>
+
+<p>By the completed state, DC01 hosted the required Windows Server roles for the lab, including AD DS, DNS and DHCP.</p>
+
+<p><strong>Evidence — DC01 Server Manager roles</strong></p>
+
+<figure><img src="01-Infrastructure-and-VM-Setup/evidence/04-DC01-Server-Manager-Roles.png" alt="DC01 Server Manager roles"><figcaption>DC01 Server Manager roles</figcaption></figure>
+
+
+
+<hr>
+
+<h1 id="s2">2. Active Directory Domain Services and Domain Join</h1>
+
+<h2>Step 2.1 — Install Active Directory Domain Services</h2>
+
+<p>On DC01:</p>
+
+<ol>
+<li>Open **Server Manager → Add roles and features**.</li>
+<li>Choose **Role-based or feature-based installation**.</li>
+<li>Select the local server.</li>
+<li>Select **Active Directory Domain Services** and accept required features.</li>
+<li>Complete installation.</li>
+</ol>
+
+<p><strong>Observed result:</strong> AD DS installed successfully and Server Manager offered the promotion action.</p>
+
+<p><strong>Evidence — Active Directory Domain Services role installed</strong></p>
+
+<figure><img src="02-AD-DS-and-Domain-Join/evidence/01-ADDS-Role-Installed.png" alt="Active Directory Domain Services role installed"><figcaption>Active Directory Domain Services role installed</figcaption></figure>
+
+
+<h2>Step 2.2 — Promote DC01 and create a new forest</h2>
+
+<ol>
+<li>Click the AD DS notification flag in Server Manager.</li>
+<li>Select **Promote this server to a domain controller**.</li>
+<li>Choose **Add a new forest**.</li>
+<li>Root domain name: `adlab.local`.</li>
+<li>Configure Directory Services Restore Mode password.</li>
+<li>Continue through DNS/NetBIOS/path pages.</li>
+<li>Verify prerequisites and install.</li>
+</ol>
+
+<p><strong>Observed result:</strong> Prerequisite checks passed, the server rebooted, and <code>DC01</code> became a writable domain controller for <code>adlab.local</code>.</p>
+
+<p><strong>Evidence — New forest configured as adlab.local</strong></p>
+
+<figure><img src="02-AD-DS-and-Domain-Join/evidence/02-New-Forest-adlab-local.png" alt="New forest configured as adlab.local"><figcaption>New forest configured as adlab.local</figcaption></figure>
+
+
+<p><strong>Evidence — AD DS prerequisite check passed</strong></p>
+
+<figure><img src="02-AD-DS-and-Domain-Join/evidence/03-ADDS-Prerequisites-Passed.png" alt="AD DS prerequisite check passed"><figcaption>AD DS prerequisite check passed</figcaption></figure>
+
+
+<h2>Step 2.3 — Prepare CLIENT01 for the domain</h2>
+
+<p>Before joining the domain, the client needed to resolve the domain controller through AD DNS.</p>
+
+<p>Validation commands used during the lab:</p>
+
+<pre><code>ping dc01.adlab.local
+nslookup dc01.adlab.local</code></pre>
+
+<p><strong>Observed result:</strong> CLIENT01 could reach the DC and resolve the server name through the ADLAB network.</p>
+
+<p><strong>Evidence — CLIENT01 reaching DC01 during DNS troubleshooting</strong></p>
+
+<figure><img src="02-AD-DS-and-Domain-Join/evidence/04-CLIENT01-DC01-Ping-Success.png" alt="CLIENT01 reaching DC01 during DNS troubleshooting"><figcaption>CLIENT01 reaching DC01 during DNS troubleshooting</figcaption></figure>
+
+
+<p><strong>Evidence — CLIENT01 resolving DC01 through DNS</strong></p>
+
+<figure><img src="02-AD-DS-and-Domain-Join/evidence/05-CLIENT01-DNS-Resolution.png" alt="CLIENT01 resolving DC01 through DNS"><figcaption>CLIENT01 resolving DC01 through DNS</figcaption></figure>
+
+
+<h2>Step 2.4 — Join CLIENT01 to adlab.local</h2>
+
+<ol>
+<li>On CLIENT01 open system/domain settings.</li>
+<li>Change membership from workgroup to **Domain**.</li>
+<li>Enter: `adlab.local`.</li>
+<li>Provide domain administrator credentials.</li>
+<li>Accept the welcome message and restart.</li>
+</ol>
+
+<p><strong>Observed result:</strong> CLIENT01 became a member computer of <code>adlab.local</code> and could authenticate domain users.</p>
+
+<p><strong>Evidence — CLIENT01 domain join success</strong></p>
+
+<figure><img src="02-AD-DS-and-Domain-Join/evidence/06-CLIENT01-Domain-Join-Success.png" alt="CLIENT01 domain join success"><figcaption>CLIENT01 domain join success</figcaption></figure>
+
+
+
+<hr>
+
+<h1 id="s3">3. Active Directory Organisational Structure, Users and Groups</h1>
+
+<h2>Step 3.1 — Create the OU structure</h2>
+
+<p>Using <strong>Active Directory Users and Computers (ADUC)</strong>, create:</p>
+
+<pre><code>ADLAB-Users
+├── IT
+├── HR
+└── Sales
+ADLAB-Computers
+ADLAB-Groups</code></pre>
+
+<p>Move <code>CLIENT01</code> into <code>ADLAB-Computers</code> so computer-targeted GPOs can be linked cleanly.</p>
+
+<p><strong>Observed result:</strong> Users, computers and security groups were separated into predictable administrative containers.</p>
+
+<p><strong>Evidence — Active Directory OU structure</strong></p>
+
+<figure><img src="03-Active-Directory-Structure/evidence/01-AD-Users-OUs-Structure.png" alt="Active Directory OU structure"><figcaption>Active Directory OU structure</figcaption></figure>
+
+
+<h2>Step 3.2 — Create department users</h2>
+
+<p>Create these lab accounts:</p>
+
+<pre class="tableline">| Display name | Username | Department |</pre>
+<pre class="tableline">|---|---|---|</pre>
+<pre class="tableline">| Md Mahadi Hasan | <code>mdmhasan</code> | IT |</pre>
+<pre class="tableline">| Sarah Ahmed | <code>sahmed</code> | Sales |</pre>
+<pre class="tableline">| Michael Brown | <code>mbrown</code> | HR |</pre>
+
+<p>Each account was placed in the appropriate departmental OU.</p>
+
+<h2>Step 3.3 — Create security groups</h2>
+
+<p>In <code>ADLAB-Groups</code>, create Global Security groups:</p>
+
+<ul>
+<li>`GG_IT_Users`</li>
+<li>`GG_HR_Users`</li>
+<li>`GG_Sales_Users`</li>
+</ul>
+
+<p>Add department users to the matching group.</p>
+
+<p><strong>Evidence — AD users and groups</strong></p>
+
+<figure><img src="03-Active-Directory-Structure/evidence/02-AD-Users-and-Groups.png" alt="AD users and groups"><figcaption>AD users and groups</figcaption></figure>
+
+
+<h2>Step 3.4 — Validate group membership</h2>
+
+<p>PowerShell/AD validation was used to confirm membership. A typical command used later in the lab was:</p>
+
+<pre><code>Get-ADPrincipalGroupMembership -Identity mdmhasan | Select-Object Name</code></pre>
+
+<p>For a group-centric check:</p>
+
+<pre><code>Get-ADGroupMember -Identity GG_Sales_Users</code></pre>
+
+<p><strong>Observed result:</strong> Users belonged to their department group plus normal domain membership such as <code>Domain Users</code>.</p>
+
+<p><strong>Evidence — Department security-group membership validation</strong></p>
+
+<figure><img src="03-Active-Directory-Structure/evidence/03-AD-Group-Membership-Validation.png" alt="Department security-group membership validation"><figcaption>Department security-group membership validation</figcaption></figure>
+
+
+
+<hr>
+
+<h1 id="s4">4. DNS, DHCP and Domain Networking</h1>
+
+<h2>Step 4.1 — Install and authorise DHCP</h2>
+
+<p>On DC01, install the <strong>DHCP Server</strong> role and complete post-install configuration so the server is authorised in Active Directory.</p>
+
+<p>Create a scope for the ADLAB subnet:</p>
+
+<ul>
+<li>Network: `192.168.10.0/24`</li>
+<li>Lease range: `192.168.10.100` – `192.168.10.200`</li>
+<li>DNS server option: `192.168.10.10`</li>
+<li>Domain DNS suffix: `adlab.local`</li>
+</ul>
+
+<p><strong>Observed result:</strong> CLIENT01 received <code>192.168.10.100</code>, used DHCP server <code>192.168.10.10</code>, and used DNS server <code>192.168.10.10</code>.</p>
+
+<p><strong>Evidence — DHCP server and scope configuration</strong></p>
+
+<figure><img src="04-DNS-DHCP-and-Networking/evidence/04-DHCP-Server-Configuration.png" alt="DHCP server and scope configuration"><figcaption>DHCP server and scope configuration</figcaption></figure>
+
+
+<p><strong>Evidence — CLIENT01 DHCP, DNS and domain network state</strong></p>
+
+<figure><img src="04-DNS-DHCP-and-Networking/evidence/01-CLIENT01-IPConfig-Domain-Network.png" alt="CLIENT01 DHCP, DNS and domain network state"><figcaption>CLIENT01 DHCP, DNS and domain network state</figcaption></figure>
+
+
+<h2>Step 4.2 — Validate DNS records</h2>
+
+<p>DNS Manager was used to inspect the <code>adlab.local</code> forward lookup zone and the <code>dc01</code> record.</p>
+
+<p><strong>Evidence — DC01 DNS record configuration</strong></p>
+
+<figure><img src="04-DNS-DHCP-and-Networking/evidence/02-DNS-DC01-Record-Configuration.png" alt="DC01 DNS record configuration"><figcaption>DC01 DNS record configuration</figcaption></figure>
+
+
+<h2>Step 4.3 — Discover the domain controller</h2>
+
+<p>Command used on CLIENT01:</p>
+
+<pre><code>nltest /dsgetdc:adlab.local</code></pre>
+
+<p><strong>Observed result:</strong> The command found <code>\DC01.adlab.local</code> at <code>192.168.10.10</code> and returned AD service flags such as PDC, GC, LDAP, KDC, TIMESERV, WRITABLE and DNS.</p>
+
+<p><strong>Evidence — Successful DC discovery with NLTEST</strong></p>
+
+<figure><img src="04-DNS-DHCP-and-Networking/evidence/03-DC-Discovery-NLTEST-Success.png" alt="Successful DC discovery with NLTEST"><figcaption>Successful DC discovery with NLTEST</figcaption></figure>
+
+
+<h2>Step 4.4 — Troubleshoot the stale NAT DNS record</h2>
+
+<h3>Problem observed</h3>
+
+<p><code>dc01.adlab.local</code> could register the NAT-facing address <code>10.0.2.15</code> in addition to the intended internal address <code>192.168.10.10</code>. That is undesirable for domain clients.</p>
+
+<h3>Interface registration check</h3>
+
+<p>PowerShell was used to inspect DNS client registration settings:</p>
+
+<pre><code>Get-DnsClient | Select-Object InterfaceAlias, RegisterThisConnectionsAddress</code></pre>
+
+<p>Final desired state:</p>
+
+<ul>
+<li>`Ethernet-Internet` → `RegisterThisConnectionsAddress = False`</li>
+<li>`Ethernet-ADLAB` → `RegisterThisConnectionsAddress = True`</li>
+</ul>
+
+<p>Set the internal NIC to register its address:</p>
+
+<pre><code>Set-DnsClient -InterfaceAlias &quot;Ethernet-ADLAB&quot; -RegisterThisConnectionsAddress $true</code></pre>
+
+<p>The NAT interface remained non-registering.</p>
+
+<h3>Remove the stale record</h3>
+
+<p>The stale <code>dc01</code> A record for <code>10.0.2.15</code> was removed from the <code>adlab.local</code> DNS zone. The lab used PowerShell for DNS resource-record cleanup; the equivalent targeted command is:</p>
+
+<pre><code>Remove-DnsServerResourceRecord -ZoneName &quot;adlab.local&quot; -RRType &quot;A&quot; -Name &quot;dc01&quot; -RecordData &quot;10.0.2.15&quot; -Force</code></pre>
+
+<h3>Clear client cache and retest</h3>
+
+<p>On CLIENT01:</p>
+
+<pre><code>ipconfig /flushdns
+nslookup dc01.adlab.local
+ping dc01.adlab.local</code></pre>
+
+<p><strong>Observed result:</strong> DNS returned the intended internal address <code>192.168.10.10</code> (plus IPv6 where applicable), no longer the stale NAT IPv4 address. Ping resolved to <code>192.168.10.10</code> and succeeded 4/4.</p>
+
+<p><strong>Evidence — PowerShell DNS cleanup evidence</strong></p>
+
+<figure><img src="04-DNS-DHCP-and-Networking/evidence/05-DNS-Troubleshooting-Cleanup.png" alt="PowerShell DNS cleanup evidence"><figcaption>PowerShell DNS cleanup evidence</figcaption></figure>
+
+
+<p><strong>Evidence — Final clean DC01 DNS validation</strong></p>
+
+<figure><img src="04-DNS-DHCP-and-Networking/evidence/06-DNS-DC01-Final-Validation.png" alt="Final clean DC01 DNS validation"><figcaption>Final clean DC01 DNS validation</figcaption></figure>
+
+
+<blockquote>Note: <code>nslookup</code> displayed DNS server name as <code>UnKnown</code> because a reverse PTR record was not configured. Forward DNS and domain operations were still working correctly.</blockquote>
+
+
+<hr>
+
+<h1 id="s5">5. Group Policy and Endpoint Security</h1>
+
+<h2>Step 5.1 — Configure the domain account lockout policy</h2>
+
+<p>Edit <strong>Default Domain Policy</strong> under:</p>
+
+<p><code>Computer Configuration → Policies → Windows Settings → Security Settings → Account Policies → Account Lockout Policy</code></p>
+
+<p>Configured values:</p>
+
+<ul>
+<li>Account lockout threshold: **5 invalid logon attempts**</li>
+<li>Account lockout duration: **30 minutes**</li>
+<li>Reset account lockout counter after: **30 minutes**</li>
+</ul>
+
+<p><strong>Observed result:</strong> Five bad-password attempts could lock a domain account as designed.</p>
+
+<p><strong>Evidence — Account lockout policy in Group Policy</strong></p>
+
+<figure><img src="05-Group-Policy-and-Endpoint-Security/evidence/01-GPO-Account-Lockout-Policy.png" alt="Account lockout policy in Group Policy"><figcaption>Account lockout policy in Group Policy</figcaption></figure>
+
+
+<h2>Step 5.2 — Configure the user workplace GPO and Sales drive mapping</h2>
+
+<p>A user GPO named <code>GPO-User-Workplace-Setting</code> was linked to <code>ADLAB-Users</code>.</p>
+
+<p>Drive mapping preference:</p>
+
+<ul>
+<li>Path: `\\DC01\Sales`</li>
+<li>Drive letter: `S:`</li>
+<li>Label: `Sales Department`</li>
+<li>Target: members of `GG_Sales_Users`</li>
+</ul>
+
+<p>Use <strong>Group Policy Preferences → Windows Settings → Drive Maps</strong>.</p>
+
+<p><strong>Evidence — GPO Sales drive mapping configuration</strong></p>
+
+<figure><img src="05-Group-Policy-and-Endpoint-Security/evidence/02-GPO-Drive-Maps-Configuration.png" alt="GPO Sales drive mapping configuration"><figcaption>GPO Sales drive mapping configuration</figcaption></figure>
+
+
+<p>Use <strong>Common → Item-level targeting</strong> to target the Sales security group.</p>
+
+<p><strong>Evidence — Security-group targeting for the Sales drive</strong></p>
+
+<figure><img src="05-Group-Policy-and-Endpoint-Security/evidence/03-GPO-Security-Group-Targeting.png" alt="Security-group targeting for the Sales drive"><figcaption>Security-group targeting for the Sales drive</figcaption></figure>
+
+
+<h2>Step 5.3 — Create a workstation security baseline</h2>
+
+<p>A computer GPO named <code>GPO-Workstation-Security-Baseline</code> was linked to <code>ADLAB-Computers</code>.</p>
+
+<p>Controls configured/validated included:</p>
+
+<ul>
+<li>Interactive logon security banner.</li>
+<li>Microsoft Defender Firewall Domain Profile: **On**.</li>
+<li>Default inbound action: **Block**.</li>
+<li>Default outbound action: **Allow**.</li>
+<li>Microsoft Defender real-time protection enforced.</li>
+<li>Advanced logon auditing (covered in the auditing section).</li>
+</ul>
+
+<h2>Step 5.4 — Enforce Microsoft Defender real-time protection</h2>
+
+<p>GPO path:</p>
+
+<p><code>Computer Configuration → Policies → Administrative Templates → Windows Components → Microsoft Defender Antivirus → Real-time Protection</code></p>
+
+<p>Set:</p>
+
+<p><code>Turn off real-time protection = Disabled</code></p>
+
+<p>That wording is intentional: <strong>Disabled</strong> means users/policy cannot turn real-time protection off through that setting.</p>
+
+<p><strong>Evidence — GPO enforcing Defender real-time protection</strong></p>
+
+<figure><img src="05-Group-Policy-and-Endpoint-Security/evidence/04-GPO-Defender-Realtime-Protection.png" alt="GPO enforcing Defender real-time protection"><figcaption>GPO enforcing Defender real-time protection</figcaption></figure>
+
+
+<p>On CLIENT01, refresh policy:</p>
+
+<pre><code>gpupdate /force</code></pre>
+
+<p>Then verify in PowerShell:</p>
+
+<pre><code>Get-MpComputerStatus | Select-Object AntivirusEnabled, RealTimeProtectionEnabled</code></pre>
+
+<p><strong>Observed result:</strong></p>
+
+<pre><code>AntivirusEnabled             True
+RealTimeProtectionEnabled    True</code></pre>
+
+<p><strong>Evidence — Defender antivirus and real-time protection verified</strong></p>
+
+<figure><img src="05-Group-Policy-and-Endpoint-Security/evidence/05-Defender-Realtime-Protection-Verified.png" alt="Defender antivirus and real-time protection verified"><figcaption>Defender antivirus and real-time protection verified</figcaption></figure>
+
+
+<h2>Step 5.5 — Verify applied computer policy</h2>
+
+<p>On CLIENT01:</p>
+
+<pre><code>gpupdate /force
+gpresult /scope computer /r</code></pre>
+
+<p><strong>Observed result:</strong> <code>GPO-Workstation-Security-Baseline</code> and <code>Default Domain Policy</code> were listed as applied. The computer DN showed <code>CLIENT01</code> in <code>OU=ADLAB-Computers</code>.</p>
+
+<p><strong>Evidence — Final Group Policy validation on CLIENT01</strong></p>
+
+<figure><img src="05-Group-Policy-and-Endpoint-Security/evidence/06-GPO-Final-Validation-CLIENT01.png" alt="Final Group Policy validation on CLIENT01"><figcaption>Final Group Policy validation on CLIENT01</figcaption></figure>
+
+
+
+<hr>
+
+<h1 id="s6">6. Department File Shares and Role-Based Access Control (RBAC)</h1>
+
+<h2>Step 6.1 — Create department folders</h2>
+
+<p>On DC01 create:</p>
+
+<pre><code>C:\CompanyShares\IT
+C:\CompanyShares\HR
+C:\CompanyShares\Sales</code></pre>
+
+<p>Share each folder and use department AD groups for access control rather than assigning permissions user-by-user.</p>
+
+<h2>Step 6.2 — Configure share and NTFS permissions</h2>
+
+<p>Apply least-privilege access so each department group has appropriate access only to its own share.</p>
+
+<p>Example design:</p>
+
+<ul>
+<li>`GG_IT_Users` → IT share</li>
+<li>`GG_HR_Users` → HR share</li>
+<li>`GG_Sales_Users` → Sales share</li>
+</ul>
+
+<p>Both share permissions and NTFS permissions were reviewed to ensure the effective permission model matched the intended RBAC design.</p>
+
+<p><strong>Evidence — Server-side share permission configuration</strong></p>
+
+<figure><img src="06-File-Shares-and-RBAC/evidence/01-Share-Permission-Configuration.png" alt="Server-side share permission configuration"><figcaption>Server-side share permission configuration</figcaption></figure>
+
+
+<h2>Step 6.3 — Validate the Sales drive as Sarah</h2>
+
+<p>Log in to CLIENT01 as Sales user <code>ADLAB\sahmed</code>.</p>
+
+<p>Commands used during final validation:</p>
+
+<pre><code>whoami
+net use
+dir S:\</code></pre>
+
+<p><strong>Observed result:</strong></p>
+
+<ul>
+<li>`whoami` returned `adlab\sahmed`.</li>
+<li>`S:` mapped to `\\DC01\Sales`.</li>
+<li>The Sales content was accessible.</li>
+</ul>
+
+<p><strong>Evidence — Sarah receiving the Sales S: drive</strong></p>
+
+<figure><img src="06-File-Shares-and-RBAC/evidence/02-Sales-Drive-Mapped-Sarah.png" alt="Sarah receiving the Sales S: drive"><figcaption>Sarah receiving the Sales S: drive</figcaption></figure>
+
+
+<h2>Step 6.4 — Verify least privilege / access denied</h2>
+
+<p>From the same Sales session:</p>
+
+<pre><code>dir \\DC01\HR
+dir \\DC01\IT</code></pre>
+
+<p><strong>Observed result:</strong> Both HR and IT access attempts returned <strong>Access is denied</strong>, while the Sales share remained accessible.</p>
+
+<p><strong>Evidence — Sales user denied HR and IT shares</strong></p>
+
+<figure><img src="06-File-Shares-and-RBAC/evidence/03-Sales-User-RBAC-Access-Denied.png" alt="Sales user denied HR and IT shares"><figcaption>Sales user denied HR and IT shares</figcaption></figure>
+
+
+<p><strong>Evidence — End-to-end RBAC validation</strong></p>
+
+<figure><img src="06-File-Shares-and-RBAC/evidence/04-RBAC-End-to-End-Validation.png" alt="End-to-end RBAC validation"><figcaption>End-to-end RBAC validation</figcaption></figure>
+
+
+
+<hr>
+
+<h1 id="s7">7. Account Lockout and Helpdesk Troubleshooting</h1>
+
+<h2>Step 7.1 — Generate a controlled account lockout</h2>
+
+<p>Using Sales user <code>sahmed</code>, intentionally submit an incorrect password five times to trigger the configured domain lockout policy.</p>
+
+<h2>Step 7.2 — Diagnose the lockout in PowerShell</h2>
+
+<p>On DC01, inspect account state:</p>
+
+<pre><code>Get-ADUser -Identity sahmed -Properties LockedOut,BadPwdCount,LastBadPasswordAttempt |
+    Select-Object SamAccountName,LockedOut,BadPwdCount,LastBadPasswordAttempt</code></pre>
+
+<p><strong>Observed result:</strong> The lab captured:</p>
+
+<ul>
+<li>`LockedOut = True`</li>
+<li>`BadPwdCount = 5`</li>
+</ul>
+
+
+<p><strong>Evidence — Locked account detected after failed password attempts</strong></p>
+
+<figure><img src="07-Account-Lockout-and-Helpdesk/evidence/01-Account-Lockout-Detected.png" alt="Locked account detected after failed password attempts"><figcaption>Locked account detected after failed password attempts</figcaption></figure>
+
+
+<h2>Step 7.3 — Unlock the account</h2>
+
+<p>Command used:</p>
+
+<pre><code>Unlock-ADAccount -Identity sahmed</code></pre>
+
+<p>Verify again:</p>
+
+<pre><code>Get-ADUser -Identity sahmed -Properties LockedOut,BadPwdCount |
+    Select-Object SamAccountName,LockedOut,BadPwdCount</code></pre>
+
+<p><strong>Observed result:</strong> <code>LockedOut</code> changed to <code>False</code>, and Sarah could sign in successfully afterward.</p>
+
+<p><strong>Evidence — PowerShell account-unlock workflow</strong></p>
+
+<figure><img src="07-Account-Lockout-and-Helpdesk/evidence/02-PowerShell-Unlock-HelpdeskUser.png" alt="PowerShell account-unlock workflow"><figcaption>PowerShell account-unlock workflow</figcaption></figure>
+
+
+<h2>Step 7.4 — Helpdesk lesson documented</h2>
+
+<p>This scenario demonstrated a common Service Desk workflow:</p>
+
+<ol>
+<li>Confirm identity/account.</li>
+<li>Check lockout status and bad-password count.</li>
+<li>Unlock only when appropriate.</li>
+<li>Confirm successful sign-in.</li>
+<li>If repeated lockout occurs, investigate saved credentials, mapped drives, scheduled tasks or another source of bad-password attempts.</li>
+</ol>
+
+
+<hr>
+
+<h1 id="s8">8. Advanced Audit Policy and Event Viewer Investigation</h1>
+
+<h2>Step 8.1 — Enable logon auditing</h2>
+
+<p>Edit the workstation security baseline:</p>
+
+<p><code>Computer Configuration → Policies → Windows Settings → Security Settings → Advanced Audit Policy Configuration → Audit Policies → Logon/Logoff</code></p>
+
+<p>Configure:</p>
+
+<p><code>Audit Logon = Success and Failure</code></p>
+
+<p><strong>Evidence — GPO advanced audit policy for logon success and failure</strong></p>
+
+<figure><img src="08-Auditing-and-Event-Viewer/evidence/01-GPO-Audit-Logon-Success-Failure.png" alt="GPO advanced audit policy for logon success and failure"><figcaption>GPO advanced audit policy for logon success and failure</figcaption></figure>
+
+
+<h2>Step 8.2 — Refresh and verify the policy on CLIENT01</h2>
+
+<p>Run:</p>
+
+<pre><code>gpupdate /force
+auditpol /get /subcategory:&quot;Logon&quot;</code></pre>
+
+<p><strong>Observed result:</strong> The <code>Logon</code> subcategory showed <strong>Success and Failure</strong>.</p>
+
+<p><strong>Evidence — CLIENT01 audit policy verification</strong></p>
+
+<figure><img src="08-Auditing-and-Event-Viewer/evidence/02-Audit-Policy-CLIENT01-Verified.png" alt="CLIENT01 audit policy verification"><figcaption>CLIENT01 audit policy verification</figcaption></figure>
+
+
+<h2>Step 8.3 — Generate a controlled failed logon</h2>
+
+<ol>
+<li>Attempt one intentionally incorrect password for `sahmed`.</li>
+<li>Then log in correctly.</li>
+<li>Open Event Viewer with administrative privileges (a standard user could not read the Security log directly).</li>
+<li>Navigate to **Windows Logs → Security**.</li>
+<li>Filter for Event ID `4625`.</li>
+</ol>
+
+<h2>Step 8.4 — Investigate Event ID 4625</h2>
+
+<p>The captured event showed:</p>
+
+<ul>
+<li>Event ID: `4625`</li>
+<li>Account Name: `sahmed`</li>
+<li>Account Domain: `ADLAB`</li>
+<li>Failure Reason: `Unknown user name or bad password`</li>
+<li>Computer: `CLIENT01.adlab.local`</li>
+<li>Audit result: Failure</li>
+</ul>
+
+<p><strong>Observed result:</strong> The failed authentication was visible and attributable to the intended lab account.</p>
+
+<p><strong>Evidence — Event Viewer failed-logon investigation — Event ID 4625</strong></p>
+
+<figure><img src="08-Auditing-and-Event-Viewer/evidence/03-Event4625-Failed-Logon-sahmed.png" alt="Event Viewer failed-logon investigation — Event ID 4625"><figcaption>Event Viewer failed-logon investigation — Event ID 4625</figcaption></figure>
+
+
+
+<hr>
+
+<h1 id="s9">9. PowerShell Administration and Helpdesk Automation</h1>
+
+<h2>Step 9.1 — Work with AD users and groups</h2>
+
+<p>Commands used across the lab included:</p>
+
+<pre><code>Import-Module ActiveDirectory
+Get-ADGroupMember -Identity GG_Sales_Users
+Get-ADPrincipalGroupMembership -Identity mdmhasan | Select-Object Name</code></pre>
+
+<p>These commands were used to verify group membership and support RBAC troubleshooting.</p>
+
+<p><strong>Evidence — PowerShell AD user-health / membership work</strong></p>
+
+<figure><img src="09-PowerShell-Automation/evidence/01-PowerShell-AD-User-Health.png" alt="PowerShell AD user-health / membership work"><figcaption>PowerShell AD user-health / membership work</figcaption></figure>
+
+
+<h2>Step 9.2 — Practice group lifecycle administration</h2>
+
+<p>A temporary security group named <code>GG_Test_PowerShell</code> was created, membership was tested, then it was cleaned up. The workflow used standard AD cmdlets:</p>
+
+<pre><code>New-ADGroup -Name &quot;GG_Test_PowerShell&quot; -GroupScope Global -GroupCategory Security `
+  -Path &quot;OU=ADLAB-Groups,DC=adlab,DC=local&quot;
+
+Add-ADGroupMember -Identity &quot;GG_Test_PowerShell&quot; -Members mdmhasan
+Get-ADGroupMember -Identity &quot;GG_Test_PowerShell&quot;
+Remove-ADGroupMember -Identity &quot;GG_Test_PowerShell&quot; -Members mdmhasan -Confirm:$false
+Remove-ADGroup -Identity &quot;GG_Test_PowerShell&quot; -Confirm:$false</code></pre>
+
+<p><strong>Observed result:</strong> The temporary group and membership were successfully created, validated, removed and cleaned up.</p>
+
+<p><strong>Evidence — PowerShell group-management practice</strong></p>
+
+<figure><img src="09-PowerShell-Automation/evidence/02-PowerShell-Group-Management.png" alt="PowerShell group-management practice"><figcaption>PowerShell group-management practice</figcaption></figure>
+
+
+<h2>Step 9.3 — Package common helpdesk tasks as functions</h2>
+
+<p>The final reusable script is saved in this archive as:</p>
+
+<p><code>../scripts/Helpdesk-AD-Toolkit.ps1</code></p>
+
+<p>Functions:</p>
+
+<pre><code>Get-ADUserHealth
+Unlock-HelpdeskUser
+Get-DepartmentMembers
+Get-FailedPasswordStatus</code></pre>
+
+<p>To load the script during the lab:</p>
+
+<pre><code>Set-ExecutionPolicy -Scope Process Bypass -Force
+. &quot;C:\IT-Lab\Scripts\Helpdesk-AD-Toolkit.ps1&quot;</code></pre>
+
+<p>Test command:</p>
+
+<pre><code>Get-ADUserHealth -Username mdmhasan</code></pre>
+
+<p><strong>Observed result:</strong> The function returned:</p>
+
+<pre><code>Username        : mdmhasan
+Enabled         : True
+LockedOut       : False
+PasswordLastSet : 9/13/2026 11:49:25 AM
+LastLogonDate   : 9/11/2026 10:48:34 PM
+Groups          : Domain Users, GG_IT_Users</code></pre>
+
+<p><strong>Evidence — Final PowerShell Helpdesk AD Toolkit output</strong></p>
+
+<figure><img src="09-PowerShell-Automation/evidence/03-PowerShell-Helpdesk-AD-Toolkit.png" alt="Final PowerShell Helpdesk AD Toolkit output"><figcaption>Final PowerShell Helpdesk AD Toolkit output</figcaption></figure>
+
+
+
+<hr>
+
+<h1 id="s10">10. Final Health and End-to-End Validation</h1>
+
+<h2>Step 10.1 — Validate DNS and connectivity</h2>
+
+<p>On CLIENT01:</p>
+
+<pre><code>ipconfig /flushdns
+nslookup dc01.adlab.local
+ping dc01.adlab.local</code></pre>
+
+<p><strong>Observed result:</strong> <code>dc01.adlab.local</code> resolved to <code>192.168.10.10</code>, and ping completed successfully.</p>
+
+<p><strong>Evidence — Final DNS and connectivity validation</strong></p>
+
+<figure><img src="10-Final-Validation/evidence/02-DNS-Final-Validation.png" alt="Final DNS and connectivity validation"><figcaption>Final DNS and connectivity validation</figcaption></figure>
+
+
+<h2>Step 10.2 — Validate domain-controller discovery</h2>
+
+<pre><code>nltest /dsgetdc:adlab.local</code></pre>
+
+<p>Expected/observed target: <code>\DC01.adlab.local</code> on <code>192.168.10.10</code> with the appropriate AD service flags.</p>
+
+<h2>Step 10.3 — Validate the secure channel</h2>
+
+<p>Run from an elevated command prompt:</p>
+
+<pre><code>nltest /sc_verify:adlab.local</code></pre>
+
+<p><strong>Observed result:</strong> The secure-channel verification returned <code>NERR_Success</code>.</p>
+
+<p><strong>Evidence — Domain secure-channel verification</strong></p>
+
+<figure><img src="10-Final-Validation/evidence/01-Domain-Secure-Channel-Verified.png" alt="Domain secure-channel verification"><figcaption>Domain secure-channel verification</figcaption></figure>
+
+
+<p><strong>Evidence — Final secure-channel proof</strong></p>
+
+<figure><img src="10-Final-Validation/evidence/04-Domain-Secure-Channel-Final.png" alt="Final secure-channel proof"><figcaption>Final secure-channel proof</figcaption></figure>
+
+
+<h2>Step 10.4 — Validate applied Group Policy</h2>
+
+<pre><code>gpupdate /force
+gpresult /scope computer /r</code></pre>
+
+<p><strong>Observed result:</strong></p>
+
+<ul>
+<li>`GPO-Workstation-Security-Baseline` applied.</li>
+<li>`Default Domain Policy` applied.</li>
+<li>Policy source was `DC01.adlab.local`.</li>
+<li>CLIENT01 appeared under the `ADLAB-Computers` OU.</li>
+</ul>
+
+<p><strong>Evidence — Final GPO validation</strong></p>
+
+<figure><img src="10-Final-Validation/evidence/03-GPO-Final-Validation.png" alt="Final GPO validation"><figcaption>Final GPO validation</figcaption></figure>
+
+
+<h2>Step 10.5 — Final project acceptance criteria</h2>
+
+<p>The lab was considered complete after confirming all of the following:</p>
+
+<ul>
+<li>CLIENT01 had a valid DHCP lease on the ADLAB network.</li>
+<li>AD DNS resolved DC01 correctly without the stale NAT IPv4 record.</li>
+<li>The domain controller could be discovered.</li>
+<li>The domain secure channel was healthy.</li>
+<li>Required computer GPOs applied.</li>
+<li>Sales drive mapping worked for the Sales user.</li>
+<li>Sales user access to HR and IT was denied.</li>
+<li>Defender antivirus and real-time protection were enabled.</li>
+<li>Logon auditing was active and Event ID 4625 could be investigated.</li>
+<li>The PowerShell helpdesk toolkit executed successfully against Active Directory.</li>
+</ul>
+
+
+<hr>
+
+<h1>Troubleshooting Log — Problems Encountered and Resolutions</h1>
+
+<h2>1. Stale DC01 NAT IP in DNS</h2>
+
+<p><strong>Symptom:</strong> <code>dc01.adlab.local</code> could resolve to the VirtualBox NAT IP <code>10.0.2.15</code> instead of the intended ADLAB address.</p>
+
+<p><strong>Cause:</strong> DNS registration on the wrong network interface.</p>
+
+<p><strong>Resolution:</strong> Keep NAT-interface DNS registration disabled, enable registration on the ADLAB interface, remove the stale A record, flush the client DNS cache and verify <code>192.168.10.10</code> resolution.</p>
+
+<hr>
+
+<h2>2. Sales account lockout</h2>
+
+<p><strong>Symptom:</strong> <code>sahmed</code> could not sign in after repeated bad passwords.</p>
+
+<p><strong>Diagnosis:</strong> <code>LockedOut=True</code>, <code>BadPwdCount=5</code>.</p>
+
+<p><strong>Resolution:</strong> <code>Unlock-ADAccount -Identity sahmed</code>, then confirm <code>LockedOut=False</code> and successful login.</p>
+
+<hr>
+
+<h2>3. Department access denied</h2>
+
+<p><strong>Symptom:</strong> Sales user received access denied for HR/IT paths.</p>
+
+<p><strong>Interpretation:</strong> This was the *expected* RBAC outcome, not a fault, because Sales should only access the Sales share.</p>
+
+<p><strong>Validation:</strong> <code>S:</code> and <code>\\DC01\Sales</code> worked; <code>\\DC01\HR</code> and <code>\\DC01\IT</code> returned Access is denied.</p>
+
+<hr>
+
+<h2>4. Security log access denied as a standard user</h2>
+
+<p><strong>Symptom:</strong> Sarah&#x27;s standard user account could not read the Security log.</p>
+
+<p><strong>Resolution:</strong> Open Event Viewer with administrative privileges and investigate Event ID 4625 there.</p>
+
+<hr>
+
+<h2>5. Copy/paste problems between host and CLIENT01</h2>
+
+<p><strong>Symptom:</strong> Clipboard sharing in VirtualBox did not work reliably.</p>
+
+<p><strong>Resolution:</strong> Confirm <strong>Shared Clipboard = Bidirectional</strong>, insert the Guest Additions CD image and install <strong>Oracle VirtualBox Guest Additions 7.1.8</strong> on CLIENT01.</p>
+
+<hr>
+
+<h2>6. `nslookup` showed Server: UnKnown</h2>
+
+<p><strong>Symptom:</strong> Forward lookup worked, but <code>nslookup</code> displayed the DNS server name as <code>UnKnown</code>.</p>
+
+<p><strong>Cause:</strong> No reverse PTR record for the DNS server.</p>
+
+<p><strong>Decision:</strong> Not a blocker for this lab; forward DNS, domain discovery and secure-channel checks were healthy.</p>
+
+
+<hr>
+
+<h1>Command Cheat Sheet</h1>
+
+<h2>Client networking and DNS</h2>
+
+<pre><code>ipconfig /all
+ipconfig /flushdns
+nslookup dc01.adlab.local
+ping dc01.adlab.local
+nltest /dsgetdc:adlab.local
+nltest /sc_verify:adlab.local</code></pre>
+
+<h2>Group Policy</h2>
+
+<pre><code>gpupdate /force
+gpresult /scope computer /r</code></pre>
+
+<h2>RBAC / mapped drive validation</h2>
+
+<pre><code>whoami
+net use
+dir S:\
+dir \\DC01\Sales
+dir \\DC01\HR
+dir \\DC01\IT</code></pre>
+
+<h2>Defender and auditing</h2>
+
+<pre><code>Get-MpComputerStatus | Select-Object AntivirusEnabled,RealTimeProtectionEnabled</code></pre>
+
+<pre><code>auditpol /get /subcategory:&quot;Logon&quot;</code></pre>
+
+<h2>Active Directory user/group checks</h2>
+
+<pre><code>Import-Module ActiveDirectory
+Get-ADUser -Identity sahmed -Properties LockedOut,BadPwdCount,LastBadPasswordAttempt
+Unlock-ADAccount -Identity sahmed
+Get-ADGroupMember -Identity GG_Sales_Users
+Get-ADPrincipalGroupMembership -Identity mdmhasan | Select-Object Name</code></pre>
+
+<h2>DNS-client registration / cleanup</h2>
+
+<pre><code>Get-DnsClient | Select-Object InterfaceAlias,RegisterThisConnectionsAddress
+Set-DnsClient -InterfaceAlias &quot;Ethernet-ADLAB&quot; -RegisterThisConnectionsAddress $true
+Remove-DnsServerResourceRecord -ZoneName &quot;adlab.local&quot; -RRType &quot;A&quot; -Name &quot;dc01&quot; -RecordData &quot;10.0.2.15&quot; -Force</code></pre>
+
+<h2>Helpdesk toolkit</h2>
+
+<pre><code>Set-ExecutionPolicy -Scope Process Bypass -Force
+. &quot;C:\IT-Lab\Scripts\Helpdesk-AD-Toolkit.ps1&quot;
+Get-ADUserHealth -Username mdmhasan
+Unlock-HelpdeskUser -Username sahmed
+Get-DepartmentMembers -GroupName GG_Sales_Users
+Get-FailedPasswordStatus -Username sahmed</code></pre></body></html>
