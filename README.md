@@ -17,6 +17,17 @@ Hands-on Windows Server 2022 and Windows 11 home lab designed to simulate common
 - Used PowerShell for AD user health checks, lockout investigation and account administration
 - Troubleshot DNS registration, domain controller discovery and secure-channel issues
 
+## Full Step-by-Step Documentation
+
+For the complete build process, commands, troubleshooting notes and screenshot evidence:
+
+🌐 **[View the Complete Interactive Lab Guide](https://mahadi8566.github.io/enterprise-windows-it-support-lab/)**
+
+Additional references:
+- [Complete Markdown Guide](docs/MASTER-LAB-GUIDE.md)
+- [Command Cheat Sheet](docs/12-Command-Cheat-Sheet.md)
+- [Troubleshooting Log](docs/11-Troubleshooting-Log.md)
+
 ## Lab Environment
 
 | Component | Configuration |
