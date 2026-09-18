@@ -39,7 +39,7 @@ The project combines a traditional on-premises Windows environment with a modern
 
 ### Windows / Active Directory
 
-🌐 **[Interactive AD Lab Guide](https://mahadi8566.github.io/enterprise-windows-it-support-lab/)**
+🌐 **[Interactive IT Support Lab Guide](https://mahadi8566.github.io/enterprise-it-support-lab/)**
 
 - [Start Here](docs/00-START-HERE.md)
 - [Master Lab Guide](docs/MASTER-LAB-GUIDE.md)
