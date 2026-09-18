@@ -1,6 +1,8 @@
-# Master Lab 1 — Complete Step-by-Step Documentation
+# Windows Server & Active Directory — Complete Step-by-Step Runbook
 
-## Enterprise Windows IT Support & Active Directory Home Lab
+This runbook documents the on-premises portion of the **Enterprise IT Support Lab**, covering the complete build from virtual-machine deployment through Active Directory, DNS, DHCP, Group Policy, RBAC, troubleshooting, PowerShell automation and final validation.
+
+For the Microsoft 365, Entra ID and Intune extension, see the **[Cloud / Modern Workplace Runbook](13-Microsoft-365-Entra-Intune/README.md)**.
 
 This archive reconstructs the lab from initial virtual-machine setup through final validation. It is written as a repeatable runbook: each section records the action, commands used where command-line work was actually performed, the observed result, and the associated screenshot evidence.
 
@@ -34,7 +36,7 @@ This archive reconstructs the lab from initial virtual-machine setup through fin
 - Groups: `GG_IT_Users`, `GG_Sales_Users`, `GG_HR_Users`
 - Shares: `C:\CompanyShares\IT`, `C:\CompanyShares\HR`, `C:\CompanyShares\Sales`
 
-Open `MASTER-LAB-GUIDE.html` for the easiest offline reading experience, or read the numbered Markdown files in order.
+For a guided overview of the complete on-premises and cloud environment, start with **[00-START-HERE.md](00-START-HERE.md)**. The numbered Markdown sections below provide the detailed evidence for each stage of the Windows / Active Directory build.
 
 
 ---
