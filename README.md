@@ -1,112 +1,114 @@
-# Enterprise Windows & Microsoft 365 IT Support Lab
+# Enterprise IT Support Lab
 
-Hands-on enterprise IT Support / Service Desk lab covering **Windows Server 2022, Active Directory, Microsoft 365, Microsoft Entra ID, Microsoft Intune, Windows 11, PowerShell, endpoint security, identity administration and troubleshooting**.
+A recruiter-facing, evidence-backed portfolio demonstrating practical **IT Support, Service Desk, Windows Server, Active Directory, Microsoft 365, Microsoft Entra ID, Microsoft Intune, Exchange Online, PowerShell, endpoint security and troubleshooting**.
 
-The project combines a traditional on-premises Windows environment with a modern Microsoft cloud-managed workplace.
+This repository combines a Windows domain lab with a Microsoft cloud lab and documents the build, validation, troubleshooting and Service Desk workflow.
 
----
+> **Portfolio scope:** This is a personal enterprise lab. The Service Desk tickets are simulated cases reconstructed from troubleshooting completed in the lab. They are not presented as employer or customer production tickets.
 
-## What I Built
+## Recruiter Quick Start
 
-### Windows Server & Active Directory
+- 🌐 **Portfolio website:** https://mahadi8566.github.io/enterprise-it-support-lab/
+- 🎫 **Service Desk ticket portfolio:** [docs/11-Service-Desk-Tickets/README.md](docs/11-Service-Desk-Tickets/README.md)
+- 🪟 **Windows Server & Active Directory master runbook:** [docs/MASTER-LAB-GUIDE.md](docs/MASTER-LAB-GUIDE.md)
+- ☁️ **Microsoft 365 / Entra ID / Intune runbook:** [docs/13-Microsoft-365-Entra-Intune/README.md](docs/13-Microsoft-365-Entra-Intune/README.md)
+- 🧭 **Complete project navigation:** [docs/00-START-HERE.md](docs/00-START-HERE.md)
+- 💻 **PowerShell Helpdesk Toolkit:** [scripts/Helpdesk-AD-Toolkit.ps1](scripts/Helpdesk-AD-Toolkit.ps1)
 
-- Built an Active Directory domain: `adlab.local`
-- Configured Windows Server 2022 as Domain Controller, DNS and DHCP server
-- Joined Windows 11 workstation `CLIENT01` to the domain
-- Created users, OUs and departmental security groups
-- Implemented NTFS/SMB permissions and least-privilege RBAC
-- Deployed Group Policy for drive mapping, account lockout, Defender and Firewall
-- Investigated failed logons, Event ID `4625`, DNS registration and secure-channel issues
-- Built a reusable PowerShell helpdesk toolkit
+## Project Architecture
 
-### Microsoft 365, Entra ID & Intune
+| Area | Lab components |
+|---|---|
+| On-premises | Windows Server 2022, AD DS, DNS, DHCP, Group Policy, SMB/NTFS, RBAC |
+| Windows endpoint | Windows 11 Pro domain client |
+| Cloud identity | Microsoft Entra ID |
+| Microsoft 365 | Users, groups, licensing, Exchange Online |
+| Endpoint management | Microsoft Intune, compliance, Company Portal, endpoint security |
+| Security | Defender, Firewall, auditing, Event ID 4625, Conditional Access Report-only |
+| Automation | PowerShell Active Directory helpdesk toolkit |
+| Service Desk | 8 documented troubleshooting cases |
 
-- Built a Microsoft 365 Business Premium lab environment
-- Administered Entra ID users, licences and security groups
-- Performed password resets, sign-in investigation and session revocation
-- Troubleshot Microsoft 365 service-plan access
-- Validated Exchange Online two-way mail flow
-- Microsoft Entra joined and Intune enrolled `INTUNE-W11`
-- Deployed Company Portal through Microsoft Intune
-- Created Windows compliance and endpoint security policies
-- Verified Microsoft Defender and Windows Firewall configuration
-- Audited group-membership changes and restored least privilege
-- Tested Conditional Access safely in **Report-only** mode
+## Windows Server & Active Directory
 
----
+The on-premises lab includes:
 
-## Documentation
+- Windows Server 2022 domain controller
+- Active Directory Domain Services
+- DNS and DHCP
+- Windows 11 domain join
+- Organisational Units, users and security groups
+- Group Policy and endpoint security
+- Department file shares
+- NTFS/SMB permissions and least-privilege RBAC
+- Account-lockout troubleshooting
+- Event Viewer and failed authentication investigation
+- PowerShell administration and automation
+- End-to-end health validation
 
-### Windows / Active Directory
+### Lab environment
 
-🌐 **[Interactive IT Support Lab Guide](https://mahadi8566.github.io/enterprise-it-support-lab/)**
+| Component | Configuration |
+|---|---|
+| Domain controller | `DC01` — Windows Server 2022 |
+| Windows client | `CLIENT01` — Windows 11 Pro |
+| AD domain | `adlab.local` |
+| ADLAB network | `192.168.10.0/24` |
 
-- [Start Here](docs/00-START-HERE.md)
-- [Master Lab Guide](docs/MASTER-LAB-GUIDE.md)
-- [Troubleshooting Log](docs/11-Troubleshooting-Log.md)
-- [Command Cheat Sheet](docs/12-Command-Cheat-Sheet.md)
-- [AD Screenshot Index](docs/AD-Screenshot-Index.md)
+## Microsoft 365, Entra ID & Intune
 
-### Microsoft 365 / Entra ID / Intune
+The cloud lab includes:
 
-📘 **[Complete Microsoft 365, Entra ID & Intune Step-by-Step Runbook](docs/13-Microsoft-365-Entra-Intune/README.md)**
+- Microsoft 365 Business Premium test tenant
+- User, group and licence administration
+- MFA and sign-in validation
+- Password reset and session revocation
+- Exchange Online two-way mail-flow validation
+- Windows 11 Entra join
+- Microsoft Intune enrollment
+- Compliance policies
+- Defender and Firewall configuration
+- Company Portal deployment
+- Group-access lifecycle and audit logs
+- Conditional Access validation in **Report-only** mode
 
-The cloud runbook contains the full configuration process, troubleshooting decisions, commands, validation results and screenshot evidence.
+## Service Desk Ticket Portfolio
 
----
+Eight structured cases demonstrate a consistent support workflow:
+
+**User report → triage → investigation → root cause / interpretation → resolution → validation → documentation**
+
+1. [INC-001 — Active Directory Account Lockout](docs/11-Service-Desk-Tickets/INC-001-Account-Lockout.md)
+2. [INC-002 — DNS Resolution / Stale DC Record](docs/11-Service-Desk-Tickets/INC-002-DNS-Resolution.md)
+3. [INC-003 — Department Share / RBAC Access](docs/11-Service-Desk-Tickets/INC-003-RBAC-Access.md)
+4. [INC-004 — Failed Authentication / Event ID 4625](docs/11-Service-Desk-Tickets/INC-004-Failed-Authentication.md)
+5. [INC-005 — Microsoft 365 Password Reset & Sign-in](docs/11-Service-Desk-Tickets/INC-005-M365-Password-SignIn.md)
+6. [INC-006 — Microsoft 365 Service-Plan Access](docs/11-Service-Desk-Tickets/INC-006-M365-Service-Plan.md)
+7. [INC-007 — Exchange Online Mail Flow](docs/11-Service-Desk-Tickets/INC-007-Exchange-Mail-Flow.md)
+8. [INC-008 — Intune Firewall Compliance](docs/11-Service-Desk-Tickets/INC-008-Intune-Compliance.md)
 
 ## Selected Evidence
 
-### Active Directory — Least-Privilege Access Control
+### Active Directory users and groups
+![Active Directory users and groups](docs/03-Active-Directory-Structure/evidence/02-AD-Users-and-Groups.png)
 
-![RBAC access validation](screenshots/08-RBAC-Sales-Allowed-HR-IT-Denied.png)
+### Group Policy validation
+![Group Policy validation](docs/05-Group-Policy-and-Endpoint-Security/evidence/06-GPO-Final-Validation-CLIENT01.png)
 
-### Windows Security — Failed Logon Investigation
+### RBAC validation
+![RBAC validation](docs/06-File-Shares-and-RBAC/evidence/04-RBAC-End-to-End-Validation.png)
 
-![Event 4625 investigation](screenshots/11-Event4625-Failed-Logon-sahmed.png)
+### Entra joined, Intune-managed and compliant endpoint
+![Intune compliant endpoint](docs/13-Microsoft-365-Entra-Intune/assets/04-08-Entra-Joined-Intune-Compliant.png)
 
-### PowerShell Helpdesk Toolkit
+### Exchange Online mail flow
+![Exchange Online mail flow](docs/13-Microsoft-365-Entra-Intune/assets/08-10-Exchange-End-to-End-Thread.png)
 
-![PowerShell helpdesk toolkit](screenshots/14-PowerShell-Helpdesk-AD-Toolkit.png)
-
-### Microsoft Intune — Managed & Compliant Windows 11
-
-![Intune managed and compliant endpoint](docs/13-Microsoft-365-Entra-Intune/assets/04-08-Entra-Joined-Intune-Compliant.png)
-
-### Exchange Online — End-to-End Mail Flow
-
-![Exchange Online mail flow validation](docs/13-Microsoft-365-Entra-Intune/assets/08-10-Exchange-End-to-End-Thread.png)
-
-### Conditional Access — Report-Only Validation
-
+### Conditional Access Report-only validation
 ![Conditional Access validation](docs/13-Microsoft-365-Entra-Intune/assets/10-03-Conditional-Access-ReportOnly-Success.png)
 
----
+## PowerShell
 
-## Lab Environment
-
-| Area | Technology |
-|---|---|
-| Virtualisation | Oracle VirtualBox |
-| Server | Windows Server 2022 |
-| Endpoints | Windows 11 Pro |
-| Identity | Active Directory + Microsoft Entra ID |
-| Networking | DNS, DHCP, TCP/IP |
-| Cloud | Microsoft 365 Business Premium |
-| Endpoint Management | Microsoft Intune |
-| Email | Exchange Online |
-| Security | Defender, Firewall, Conditional Access |
-| Automation | PowerShell |
-
----
-
-## PowerShell Toolkit
-
-Reusable Active Directory helpdesk script:
-
-[`scripts/Helpdesk-AD-Toolkit.ps1`](scripts/Helpdesk-AD-Toolkit.ps1)
-
-Functions include:
+A reusable helpdesk toolkit is included:
 
 ```powershell
 Get-ADUserHealth
@@ -115,21 +117,13 @@ Get-DepartmentMembers
 Get-FailedPasswordStatus
 ```
 
----
+See [scripts/Helpdesk-AD-Toolkit.ps1](scripts/Helpdesk-AD-Toolkit.ps1).
 
 ## Skills Demonstrated
 
-`IT Support` · `Service Desk` · `Windows Server 2022` · `Windows 11` · `Active Directory` · `Microsoft 365` · `Microsoft Entra ID` · `Microsoft Intune` · `Exchange Online` · `Conditional Access` · `DNS` · `DHCP` · `Group Policy` · `PowerShell` · `RBAC` · `NTFS Permissions` · `Microsoft Defender` · `Windows Firewall` · `Event Viewer` · `Audit Logs` · `Sign-in Logs` · `Device Compliance` · `Application Deployment` · `Authentication Troubleshooting`
+`Windows 10/11` · `Windows Server 2022` · `Active Directory` · `DNS` · `DHCP` · `Group Policy` · `Microsoft 365` · `Entra ID` · `Intune` · `Exchange Online` · `Conditional Access` · `PowerShell` · `RBAC` · `Event Viewer` · `Microsoft Defender` · `Windows Firewall` · `Endpoint Compliance` · `Troubleshooting` · `Service Desk Documentation`
 
----
+## Author
 
-## Project Purpose
-
-I built this environment to develop practical skills relevant to **IT Support, Service Desk, Desktop Support and Junior Modern Workplace** roles.
-
-Rather than documenting only successful configurations, the project includes realistic troubleshooting, access-control testing, user administration, endpoint management, security validation and audit evidence.
-
----
-
-**Author:** Md Mahadi Hasan  
-**Target roles:** IT Support · Service Desk · Desktop Support · Junior Systems Administration · Junior Modern Workplace Support
+**Md Mahadi Hasan**  
+Target roles: **IT Support · Service Desk · Desktop Support · Junior Systems Administration · Junior Microsoft 365 / Modern Workplace Support**
