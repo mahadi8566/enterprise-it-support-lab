@@ -113,3 +113,23 @@ Get-ADUserHealth
 Unlock-HelpdeskUser
 Get-DepartmentMembers
 Get-FailedPasswordStatus
+```
+
+---
+
+## Skills Demonstrated
+
+`IT Support` · `Service Desk` · `Windows Server 2022` · `Windows 11` · `Active Directory` · `Microsoft 365` · `Microsoft Entra ID` · `Microsoft Intune` · `Exchange Online` · `Conditional Access` · `DNS` · `DHCP` · `Group Policy` · `PowerShell` · `RBAC` · `NTFS Permissions` · `Microsoft Defender` · `Windows Firewall` · `Event Viewer` · `Audit Logs` · `Sign-in Logs` · `Device Compliance` · `Application Deployment` · `Authentication Troubleshooting`
+
+---
+
+## Project Purpose
+
+I built this environment to develop practical skills relevant to **IT Support, Service Desk, Desktop Support and Junior Modern Workplace** roles.
+
+Rather than documenting only successful configurations, the project includes realistic troubleshooting, access-control testing, user administration, endpoint management, security validation and audit evidence.
+
+---
+
+**Author:** Md Mahadi Hasan  
+**Target roles:** IT Support · Service Desk · Desktop Support · Junior Systems Administration · Junior Modern Workplace Support
