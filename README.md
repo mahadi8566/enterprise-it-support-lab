@@ -1,32 +1,71 @@
-# Enterprise Windows IT Support & Active Directory Lab
+# Enterprise Windows & Microsoft 365 IT Support Lab
 
-Hands-on Windows Server 2022 and Windows 11 home lab designed to simulate common IT Support, Service Desk and Junior Systems Administration tasks in a small enterprise environment.
+Hands-on enterprise-style IT Support / Service Desk lab covering **Windows Server 2022, Active Directory, Microsoft 365, Microsoft Entra ID, Microsoft Intune, Windows 11, PowerShell, endpoint security and troubleshooting**.
+
+This project demonstrates both a traditional on-premises Windows environment and a modern Microsoft cloud-managed workplace.
 
 ## Project Highlights
 
+### On-premises Windows / Active Directory
 - Built an Active Directory domain: `adlab.local`
 - Configured Windows Server 2022 as Domain Controller, DNS and DHCP server
-- Joined a Windows 11 workstation (`CLIENT01`) to the domain
+- Joined Windows 11 workstation `CLIENT01` to the domain
 - Created organisational units, users and role-based security groups
 - Implemented departmental file shares for IT, HR and Sales
 - Applied NTFS/share permissions using least-privilege RBAC
-- Deployed department drive mappings with Group Policy
-- Configured account lockout and workstation security policies
-- Enforced Microsoft Defender real-time protection using GPO
-- Enabled advanced logon auditing and investigated Event ID 4625
-- Used PowerShell for AD user health checks, lockout investigation and account administration
-- Troubleshot DNS registration, domain controller discovery and secure-channel issues
+- Deployed mapped drives and workstation policies with Group Policy
+- Configured account lockout, Defender, Firewall and advanced logon auditing
+- Investigated Event ID 4625, DNS registration and domain secure-channel issues
+- Built a reusable PowerShell helpdesk toolkit
 
-## Full Step-by-Step Documentation
+### Microsoft 365 / Entra ID / Intune
+- Built a Microsoft 365 Business Premium lab environment
+- Administered Entra ID users and departmental security groups
+- Performed password reset, sign-in-log review and session revocation
+- Troubleshot Microsoft 365 licensing/service-plan access
+- Validated two-way Exchange Online mail flow
+- Microsoft Entra joined and Intune enrolled `INTUNE-W11`
+- Deployed Microsoft Company Portal through Intune
+- Created and validated Windows compliance requirements
+- Deployed Defender and Windows Firewall configuration through Intune
+- Audited temporary group-access changes and restored least privilege
+- Created a Conditional Access policy requiring a compliant device
+- Validated Conditional Access safely in **Report-only** mode
 
-For the complete build process, commands, troubleshooting notes and screenshot evidence:
+## Documentation
 
-🌐 **[View the Complete Interactive Lab Guide](https://mahadi8566.github.io/enterprise-windows-it-support-lab/)**
+### On-premises Windows / Active Directory
+🌐 **[View the Complete Interactive AD Lab Guide](https://mahadi8566.github.io/enterprise-windows-it-support-lab/)**
 
-Additional references:
-- [Complete Markdown Guide](docs/MASTER-LAB-GUIDE.md)
-- [Command Cheat Sheet](docs/12-Command-Cheat-Sheet.md)
+- [Start Here](docs/00-START-HERE.md)
 - [Troubleshooting Log](docs/11-Troubleshooting-Log.md)
+- [Command Cheat Sheet](docs/12-Command-Cheat-Sheet.md)
+
+### Microsoft 365 / Entra ID / Intune
+📘 **[View the Complete Microsoft 365, Entra ID & Intune Step-by-Step Runbook](docs/13-Microsoft-365-Entra-Intune/README.md)**
+
+The cloud runbook includes configuration steps, troubleshooting decisions, commands used, observed results and screenshot evidence.
+
+---
+
+## Selected Cloud Evidence
+
+### Intune-managed and compliant Windows 11 endpoint
+![Intune managed and compliant Windows 11 endpoint](docs/13-Microsoft-365-Entra-Intune/assets/04-08-Entra-Joined-Intune-Compliant.png)
+
+### Compliance checks
+![All configured compliance checks passed](docs/13-Microsoft-365-Entra-Intune/assets/05-10-Per-Setting-All-Compliant.png)
+
+### Intune security policy deployment
+![Intune security configuration deployed successfully](docs/13-Microsoft-365-Entra-Intune/assets/06-08-Config-Deployment-Succeeded.png)
+
+### Company Portal deployment
+![Company Portal deployment status](docs/13-Microsoft-365-Entra-Intune/assets/07-07-Company-Portal-Device-Installed-Status.png)
+
+### Conditional Access validation
+![Conditional Access Report-only validation](docs/13-Microsoft-365-Entra-Intune/assets/10-03-Conditional-Access-ReportOnly-Success.png)
+
+---
 
 ## Lab Environment
 
@@ -34,12 +73,14 @@ Additional references:
 |---|---|
 | Hypervisor | Oracle VirtualBox |
 | Domain Controller | Windows Server 2022 (`DC01`) |
-| Client | Windows 11 Pro (`CLIENT01`) |
-| Domain | `adlab.local` |
+| On-prem Client | Windows 11 Pro (`CLIENT01`) |
+| AD Domain | `adlab.local` |
 | Internal network | `192.168.10.0/24` |
-| DC/DNS/DHCP | `192.168.10.10` |
-| Client DHCP lease | `192.168.10.100` |
-| Internet access | VirtualBox NAT |
+| DC / DNS / DHCP | `192.168.10.10` |
+| Cloud endpoint | Windows 11 (`INTUNE-W11`) |
+| Cloud platform | Microsoft 365 Business Premium |
+| Identity | Microsoft Entra ID |
+| Endpoint management | Microsoft Intune |
 
 ## Active Directory Structure
 
@@ -84,45 +125,25 @@ The domain account lockout policy was configured to lock accounts after repeated
 
 I intentionally generated failed logons, verified the account lockout state and used PowerShell to investigate and restore access.
 
-![Account lockout policy](screenshots/04-GPO-Account-Lockout-Policy.png)
-
 ![Account lockout detected](screenshots/05-Account-Lockout-Detected.png)
 
 ## File Shares and RBAC
 
 Departmental shares were created for IT, HR and Sales. Permissions were assigned to AD security groups rather than individual users.
 
-A Sales user successfully received the Sales drive through Group Policy:
-
-![Sales drive](screenshots/07-Sarah-Sales-Drive-Verified.png)
-
-The same user could access the Sales share but was denied access to HR and IT resources, demonstrating least-privilege access control.
+A Sales user could access the Sales share but was denied access to HR and IT resources, demonstrating least-privilege access control.
 
 ![RBAC test](screenshots/08-RBAC-Sales-Allowed-HR-IT-Denied.png)
 
-## Microsoft Defender
-
-Microsoft Defender real-time protection was enforced through Group Policy and verified on the Windows 11 workstation.
-
-![Defender verification](screenshots/10-Defender-Realtime-Protection-Verified.png)
-
 ## Security Event Investigation
 
-Advanced Audit Policy was configured for successful and failed logons. I generated a controlled failed login and investigated the Windows Security log.
-
-Event Viewer recorded:
-
-- Event ID: `4625`
-- Account: `sahmed`
-- Domain: `ADLAB`
-- Failure reason: unknown username or bad password
-- Computer: `CLIENT01.adlab.local`
+Advanced Audit Policy was configured for successful and failed logons. I generated a controlled failed login and investigated Windows Security Event ID `4625`.
 
 ![Event 4625](screenshots/11-Event4625-Failed-Logon-sahmed.png)
 
 ## PowerShell Helpdesk Toolkit
 
-I consolidated common Active Directory support tasks into a reusable PowerShell script:
+Reusable Active Directory support script:
 
 [`scripts/Helpdesk-AD-Toolkit.ps1`](scripts/Helpdesk-AD-Toolkit.ps1)
 
@@ -135,39 +156,17 @@ Get-DepartmentMembers
 Get-FailedPasswordStatus
 ```
 
-Example:
-
-```powershell
-Get-ADUserHealth -Username mdmhasan
-```
-
 ![PowerShell toolkit](screenshots/14-PowerShell-Helpdesk-AD-Toolkit.png)
-
-## Domain Health Validation
-
-Final validation included:
-
-```powershell
-nslookup dc01.adlab.local
-ping dc01.adlab.local
-nltest /dsgetdc:adlab.local
-nltest /sc_verify:adlab.local
-gpresult /scope computer /r
-```
-
-The client successfully resolved and reached the domain controller, discovered AD services, verified the secure channel and applied the required Group Policy Objects.
-
-![Secure channel validation](screenshots/15-Domain-Secure-Channel-Verified.png)
 
 ## Skills Demonstrated
 
-`Windows Server 2022` · `Windows 11` · `Active Directory Domain Services` · `DNS` · `DHCP` · `Group Policy` · `PowerShell` · `NTFS Permissions` · `SMB File Shares` · `RBAC` · `Microsoft Defender` · `Windows Firewall` · `Event Viewer` · `Authentication Troubleshooting` · `VirtualBox`
+`Windows Server 2022` · `Windows 11` · `Active Directory` · `Microsoft 365` · `Microsoft Entra ID` · `Microsoft Intune` · `Exchange Online` · `Conditional Access` · `DNS` · `DHCP` · `Group Policy` · `PowerShell` · `NTFS Permissions` · `SMB` · `RBAC` · `Microsoft Defender` · `Windows Firewall` · `Event Viewer` · `Audit Logs` · `Sign-in Logs` · `Device Compliance` · `Application Deployment` · `Authentication Troubleshooting`
 
 ## Why I Built This
 
-I built this lab to develop practical skills relevant to IT Support, Service Desk and Desktop Support roles. Rather than documenting only successful configuration, I included realistic troubleshooting scenarios such as DNS-registration issues, account lockouts, failed authentication events, access-denied incidents and domain trust validation.
+I built this lab to develop practical skills relevant to IT Support, Service Desk, Desktop Support and Junior Modern Workplace roles. The project includes not only successful configuration but also realistic troubleshooting, user-access administration, security validation and audit evidence.
 
 ---
 
 **Author:** Md Mahadi Hasan  
-**Target roles:** IT Support · Service Desk · Desktop Support · Junior Systems Administration
+**Target roles:** IT Support · Service Desk · Desktop Support · Junior Systems Administration · Junior Modern Workplace Support
