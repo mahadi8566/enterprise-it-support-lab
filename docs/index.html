@@ -1,6 +1,146 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Master Lab 1</title><style>body{font-family:Segoe UI,Arial,sans-serif;max-width:1100px;margin:40px auto;padding:0 24px;line-height:1.6;color:#1f2328}h1{font-size:34px;border-bottom:1px solid #d0d7de;padding-bottom:10px}h2{margin-top:42px;font-size:27px}h3{font-size:21px;margin-top:30px}pre{background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:14px;overflow:auto}code{background:#f6f8fa;padding:2px 5px;border-radius:4px}pre code{background:none;padding:0}figure{margin:24px 0 40px}figure img{max-width:100%;border:1px solid #d0d7de;border-radius:8px}figcaption{font-size:14px;color:#57606a;margin-top:8px}blockquote{border-left:4px solid #0969da;padding-left:14px;color:#57606a;margin-left:0}hr{border:0;border-top:1px solid #d8dee4;margin:55px 0}.tableline{margin:0;border-radius:0;padding:5px 10px}</style></head><body><h2>Contents</h2><p><a href="#s1">1. 01 Infrastructure and VM Setup</a></p><p><a href="#s2">2. 02 AD DS and Domain Join</a></p><p><a href="#s3">3. 03 Active Directory Structure</a></p><p><a href="#s4">4. 04 DNS DHCP and Networking</a></p><p><a href="#s5">5. 05 Group Policy and Endpoint Security</a></p><p><a href="#s6">6. 06 File Shares and RBAC</a></p><p><a href="#s7">7. 07 Account Lockout and Helpdesk</a></p><p><a href="#s8">8. 08 Auditing and Event Viewer</a></p><p><a href="#s9">9. 09 PowerShell Automation</a></p><p><a href="#s10">10. 10 Final Validation</a></p><h1>Master Lab 1 — Complete Step-by-Step Documentation</h1>
+<!doctype html><html><head><meta charset="utf-8"><title>Enterprise Windows & Microsoft 365 IT Support Lab</title><style>body{font-family:Segoe UI,Arial,sans-serif;max-width:1100px;margin:40px auto;padding:0 24px;line-height:1.6;color:#1f2328}h1{font-size:34px;border-bottom:1px solid #d0d7de;padding-bottom:10px}h2{margin-top:42px;font-size:27px}h3{font-size:21px;margin-top:30px}pre{background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:14px;overflow:auto}code{background:#f6f8fa;padding:2px 5px;border-radius:4px}pre code{background:none;padding:0}figure{margin:24px 0 40px}figure img{max-width:100%;border:1px solid #d0d7de;border-radius:8px}figcaption{font-size:14px;color:#57606a;margin-top:8px}blockquote{border-left:4px solid #0969da;padding-left:14px;color:#57606a;margin-left:0}hr{border:0;border-top:1px solid #d8dee4;margin:55px 0}.tableline{margin:0;border-radius:0;padding:5px 10px}
+.hero{padding:34px 0 20px}
+.hero h1{font-size:40px;margin-bottom:10px}
+.hero p{font-size:18px;color:#57606a;max-width:900px}
+.topnav{position:sticky;top:0;background:#ffffffee;backdrop-filter:blur(8px);border-bottom:1px solid #d0d7de;padding:12px 0;z-index:10;margin-bottom:28px}
+.topnav a{margin-right:18px;text-decoration:none;font-weight:600;color:#0969da}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin:20px 0 28px}
+.card{border:1px solid #d0d7de;border-radius:12px;padding:18px;background:#fff}
+.card h3{margin-top:0}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.badge{border:1px solid #d0d7de;border-radius:999px;padding:5px 10px;background:#f6f8fa;font-size:14px}
+.actions a{display:inline-block;margin:8px 10px 0 0;padding:9px 14px;border:1px solid #0969da;border-radius:8px;text-decoration:none;font-weight:600}
+.cloud-evidence{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.cloud-evidence figure{margin:0}
+.small{font-size:14px;color:#57606a}
+.section-intro{font-size:17px;color:#57606a}
+html{scroll-behavior:smooth}
+</style></head><body id="top">
+
+<div class="topnav">
+  <a href="#overview">Overview</a>
+  <a href="#cloud">Microsoft 365 / Entra / Intune</a>
+  <a href="#ad-runbook">Windows / Active Directory</a>
+  <a href="#troubleshooting">Troubleshooting</a>
+</div>
+
+<section class="hero">
+  <h1>Enterprise Windows &amp; Microsoft 365 IT Support Lab</h1>
+  <p>
+    Hands-on enterprise IT Support / Service Desk portfolio combining a traditional
+    Windows Server and Active Directory environment with Microsoft 365, Microsoft Entra ID,
+    Microsoft Intune, Exchange Online, PowerShell and endpoint-security administration.
+  </p>
+
+  <div class="badges">
+    <span class="badge">Windows Server 2022</span>
+    <span class="badge">Active Directory</span>
+    <span class="badge">Microsoft 365</span>
+    <span class="badge">Microsoft Entra ID</span>
+    <span class="badge">Microsoft Intune</span>
+    <span class="badge">Exchange Online</span>
+    <span class="badge">PowerShell</span>
+    <span class="badge">Conditional Access</span>
+  </div>
+
+  <div class="actions">
+    <a href="https://github.com/mahadi8566/enterprise-windows-it-support-lab">GitHub Repository</a>
+    <a href="13-Microsoft-365-Entra-Intune/README.md">Microsoft 365 Runbook</a>
+    <a href="#ad-runbook">Windows / AD Runbook</a>
+  </div>
+</section>
+
+<hr>
+
+<section id="overview">
+  <h2>Project Overview</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Windows Server &amp; Active Directory</h3>
+      <ul>
+        <li>Windows Server 2022 domain controller</li>
+        <li>AD DS, DNS and DHCP</li>
+        <li>Windows 11 domain join</li>
+        <li>Organisational units, users and security groups</li>
+        <li>Group Policy and endpoint security</li>
+        <li>NTFS/SMB permissions and least-privilege RBAC</li>
+        <li>Account-lockout and Event ID 4625 investigation</li>
+        <li>PowerShell helpdesk automation</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Microsoft 365, Entra ID &amp; Intune</h3>
+      <ul>
+        <li>Microsoft 365 Business Premium lab tenant</li>
+        <li>Entra ID user, group and licence administration</li>
+        <li>Password reset, sign-in logs and session revocation</li>
+        <li>Exchange Online mail-flow validation</li>
+        <li>Windows 11 Entra Join and Intune enrollment</li>
+        <li>Company Portal deployment</li>
+        <li>Compliance and endpoint-security policies</li>
+        <li>Conditional Access validation in Report-only mode</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<section id="cloud">
+  <h2>Microsoft 365 / Entra ID / Intune</h2>
+  <p class="section-intro">
+    The cloud extension adds modern workplace administration and Service Desk scenarios to the
+    on-premises Windows lab. Full configuration steps and all supporting screenshots are stored in
+    the dedicated cloud runbook.
+  </p>
+
+  <p>
+    <strong><a href="13-Microsoft-365-Entra-Intune/README.md">Open the complete Microsoft 365, Entra ID &amp; Intune step-by-step runbook</a></strong>
+  </p>
+
+  <div class="cloud-evidence">
+    <figure>
+      <img src="13-Microsoft-365-Entra-Intune/assets/04-08-Entra-Joined-Intune-Compliant.png" alt="INTUNE-W11 Entra joined, Intune managed and compliant">
+      <figcaption>INTUNE-W11 — Entra joined, Intune managed and compliant.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="13-Microsoft-365-Entra-Intune/assets/08-10-Exchange-End-to-End-Thread.png" alt="Exchange Online two-way mail flow">
+      <figcaption>Exchange Online — end-to-end two-way mail-flow validation.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="13-Microsoft-365-Entra-Intune/assets/10-03-Conditional-Access-ReportOnly-Success.png" alt="Conditional Access report-only success">
+      <figcaption>Conditional Access — compliant-device requirement validated safely in Report-only mode.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<hr>
+
+<section id="ad-runbook">
+  <h2>Windows Server &amp; Active Directory — Detailed Runbook</h2>
+  <p class="section-intro">
+    The sections below preserve the original step-by-step build, troubleshooting notes,
+    commands used and screenshot evidence from the Windows / Active Directory lab.
+  </p>
+
+  <h3>Contents</h3>
+  <p><a href="#s1">1. Infrastructure and VM Setup</a></p>
+  <p><a href="#s2">2. AD DS and Domain Join</a></p>
+  <p><a href="#s3">3. Active Directory Structure</a></p>
+  <p><a href="#s4">4. DNS, DHCP and Networking</a></p>
+  <p><a href="#s5">5. Group Policy and Endpoint Security</a></p>
+  <p><a href="#s6">6. File Shares and RBAC</a></p>
+  <p><a href="#s7">7. Account Lockout and Helpdesk</a></p>
+  <p><a href="#s8">8. Auditing and Event Viewer</a></p>
+  <p><a href="#s9">9. PowerShell Automation</a></p>
+  <p><a href="#s10">10. Final Validation</a></p>
+</section>
 
 <h2>Enterprise Windows IT Support &amp; Active Directory Home Lab</h2>
+
 
 <p>This archive reconstructs the lab from initial virtual-machine setup through final validation. It is written as a repeatable runbook: each section records the action, commands used where command-line work was actually performed, the observed result, and the associated screenshot evidence.</p>
 
@@ -855,7 +995,7 @@ gpresult /scope computer /r</code></pre>
 
 <hr>
 
-<h1>Troubleshooting Log — Problems Encountered and Resolutions</h1>
+<h1 id="troubleshooting">Troubleshooting Log — Problems Encountered and Resolutions</h1>
 
 <h2>1. Stale DC01 NAT IP in DNS</h2>
 
@@ -966,4 +1106,10 @@ Remove-DnsServerResourceRecord -ZoneName &quot;adlab.local&quot; -RRType &quot;A
 Get-ADUserHealth -Username mdmhasan
 Unlock-HelpdeskUser -Username sahmed
 Get-DepartmentMembers -GroupName GG_Sales_Users
-Get-FailedPasswordStatus -Username sahmed</code></pre></body></html>
+Get-FailedPasswordStatus -Username sahmed</code></pre>
+<hr>
+<p class="small">
+  Portfolio project by Md Mahadi Hasan · Target roles: IT Support · Service Desk · Desktop Support · Junior Systems Administration · Junior Modern Workplace Support
+</p>
+<p><a href="#top">Back to top</a></p>
+</body></html>
