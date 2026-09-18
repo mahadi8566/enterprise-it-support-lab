@@ -4,13 +4,23 @@ This is the navigation hub for the complete portfolio.
 
 > **Scope:** Personal enterprise lab. Service Desk tickets are simulated cases reconstructed from completed lab troubleshooting.
 
+## How the documentation is organised
+
+The short pages such as this file and the root README are recruiter-facing navigation pages. **The detailed technical work has not been removed.**
+
+For Windows Server / Active Directory, the [Complete AD Master Runbook](MASTER-LAB-GUIDE.md) records the build from the first VirtualBox VM through final validation, including GUI actions, commands actually used, observed results, troubleshooting decisions and screenshot evidence.
+
+The numbered Windows sections below provide the same work in smaller topic-by-topic documents. The Microsoft 365 / Entra ID / Intune section is also a complete step-by-step runbook split into 11 chapters with screenshots.
+
 ## Recommended recruiter path
 
 1. [Portfolio website](https://mahadi8566.github.io/enterprise-it-support-lab/)
 2. [Service Desk Ticket Portfolio](11-Service-Desk-Tickets/README.md)
 3. [Windows Server & Active Directory Master Runbook](MASTER-LAB-GUIDE.md)
 4. [Microsoft 365 / Entra ID / Intune Runbook](13-Microsoft-365-Entra-Intune/README.md)
-5. [PowerShell Helpdesk Toolkit](../scripts/Helpdesk-AD-Toolkit.ps1)
+5. [Troubleshooting Log](11-Troubleshooting-Log.md)
+6. [Command Cheat Sheet](12-Command-Cheat-Sheet.md)
+7. [PowerShell Helpdesk Toolkit](../scripts/Helpdesk-AD-Toolkit.ps1)
 
 ## Part A — Windows Server & Active Directory
 
@@ -55,8 +65,10 @@ This is the navigation hub for the complete portfolio.
 - [11 — Final Validation](13-Microsoft-365-Entra-Intune/11-Final-Validation.md)
 - [Cloud Screenshot Index](13-Microsoft-365-Entra-Intune/SCREENSHOT-INDEX.md)
 
-## Automation
+## Troubleshooting & Command Reference
 
+- [Troubleshooting Log](11-Troubleshooting-Log.md) — issues encountered, diagnosis and resolutions
+- [Command Cheat Sheet](12-Command-Cheat-Sheet.md) — networking, DNS, Group Policy, RBAC, auditing and AD/PowerShell commands
 - [PowerShell Helpdesk AD Toolkit](../scripts/Helpdesk-AD-Toolkit.ps1)
 
 ## Portfolio Website
