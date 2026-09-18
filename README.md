@@ -15,6 +15,15 @@ This repository combines a Windows domain lab with a Microsoft cloud lab and doc
 - 🧭 **Complete project navigation:** [docs/00-START-HERE.md](docs/00-START-HERE.md)
 - 💻 **PowerShell Helpdesk Toolkit:** [scripts/Helpdesk-AD-Toolkit.ps1](scripts/Helpdesk-AD-Toolkit.ps1)
 
+## Full Step-by-Step Documentation
+
+The repository keeps the complete technical process, not only the final screenshots.
+
+- **Windows Server / Active Directory:** the [Complete AD Master Runbook](docs/MASTER-LAB-GUIDE.md) starts with VirtualBox VM creation and continues step by step through AD DS, domain join, OUs/users/groups, DNS, DHCP, Group Policy, Defender/Firewall, file shares, RBAC, account lockout, Event Viewer, PowerShell and final validation. Each stage records the actions taken, commands actually used, observed results and screenshot evidence.
+- **Microsoft 365 / Entra ID / Intune:** the [Cloud Runbook](docs/13-Microsoft-365-Entra-Intune/README.md) is split into 11 step-by-step chapters covering tenant setup, MFA, users/groups/licensing, Entra verification, Intune enrollment, compliance, security configuration, Company Portal deployment, M365 helpdesk/Exchange, access auditing, Conditional Access and final validation.
+- **Troubleshooting:** [Troubleshooting Log](docs/11-Troubleshooting-Log.md) records issues encountered and how they were resolved.
+- **Commands:** [Command Cheat Sheet](docs/12-Command-Cheat-Sheet.md) collects the validation and troubleshooting commands used in the lab.
+
 ## Project Architecture
 
 | Area | Lab components |
